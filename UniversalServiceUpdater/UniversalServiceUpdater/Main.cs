@@ -80,9 +80,9 @@ namespace IndieGoat.Net.Updater
             //Download's the file per string
             foreach (string url in DownloadURLs)
             {
-                index++;
-
                 string appName = DownloadNames[index];
+
+                index++;
 
                 using (WebClient client = new WebClient())
                 {
