@@ -71,15 +71,24 @@ namespace IndieGoat.Net.Updater
             List<string> DownloadURLs = new List<string>();
             DownloadURLs.Add("https://dl.dropboxusercontent.com/s/7c4z94rzcm73qb6/UniversalServiceUpdater.exe?dl=0"); //Adds UniversalServiceUpdater application
             DownloadURLs.Add("https://dl.dropboxusercontent.com/s/mvak9zh5rbf5d0o/DotNetZip.dll?dl=0"); //Adds DotNetZip Lib
+            List<string> DownloadNames = new List<string>();
+            DownloadNames.Add("UniversalServiceUpdater.exe");
+            DownloadNames.Add("DotNetZip.dll");
+
+            int index = 0;
 
             //Download's the file per string
             foreach (string url in DownloadURLs)
             {
+                index++;
+
+                string appName = DownloadNames[index];
+
                 using (WebClient client = new WebClient())
                 {
                     try
                     {
-                        client.DownloadFile(url, UniversalApiDirectory);
+                        client.DownloadFile(url, UniversalApiDirectory + appName);
                     }
                     catch { }
                 }
@@ -132,7 +141,7 @@ namespace IndieGoat.Net.Updater
                 const string quote = "\"";
 
                 //Starts the process
-                Process.Start(@"C:\VortexStudio\DYN\GlobalDYNUpdater.exe", Application.ProductName + " " + quote + Application.StartupPath + quote + " " + quote + _updateURLlocation + quote);
+                Process.Start(UniversalApiDirectory + UniversalApplicationName, Application.ProductName + " " + quote + Application.StartupPath + quote + " " + quote + _updateURLlocation + quote);
             }
         }
 
