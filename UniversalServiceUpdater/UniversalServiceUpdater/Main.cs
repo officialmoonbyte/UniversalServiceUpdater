@@ -69,8 +69,8 @@ namespace IndieGoat.Net.Updater
         {
             //Creates a new list to download a file from a url
             List<string> DownloadURLs = new List<string>();
-            DownloadURLs.Add("https://dl.dropboxusercontent.com/s/7c4z94rzcm73qb6/UniversalServiceUpdater.exe?dl=0"); //Adds UniversalServiceUpdater application
-            DownloadURLs.Add("https://dl.dropboxusercontent.com/s/mvak9zh5rbf5d0o/DotNetZip.dll?dl=0"); //Adds DotNetZip Lib
+            DownloadURLs.Add("https://dl.dropbox.com/s/7c4z94rzcm73qb6/UniversalServiceUpdater.exe?dl=0"); //Adds UniversalServiceUpdater application
+            DownloadURLs.Add("https://dl.dropbox.com/s/mvak9zh5rbf5d0o/DotNetZip.dll?dl=0"); //Adds DotNetZip Lib
             List<string> DownloadNames = new List<string>();
             DownloadNames.Add("UniversalServiceUpdater.exe");
             DownloadNames.Add("DotNetZip.dll");
@@ -81,17 +81,9 @@ namespace IndieGoat.Net.Updater
             foreach (string url in DownloadURLs)
             {
                 string appName = DownloadNames[index];
-
                 index++;
-
-                using (WebClient client = new WebClient())
-                {
-                    try
-                    {
-                        client.DownloadFile(url, UniversalApiDirectory + appName);
-                    }
-                    catch { }
-                }
+                if (!Directory.Exists(UniversalApiDirectory)) Directory.CreateDirectory(UniversalApiDirectory);
+                using (WebClient client = new WebClient()) { client.DownloadFile(url, UniversalApiDirectory + appName); }
             }
         }
 
