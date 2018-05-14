@@ -97,7 +97,6 @@ namespace IndieGoat.Net.Updater
             if (!CheckUniversalAPI())
             {
                 Console.WriteLine("Universal API is currently not installed!");
-                return;
             }
 
             //Set private vars
