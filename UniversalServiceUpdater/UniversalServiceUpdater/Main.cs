@@ -1,5 +1,4 @@
-﻿using IndieGoat.InideClient.Default;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -17,7 +16,7 @@ namespace IndieGoat.Net.Updater
         string ApplicationName;
         string _updateURLlocation = "";
 
-        IndieClient UpdateServer;
+        UniversalClient.UniversalClient UpdateServer;
 
         string UniversalApiDirectory = @"C:\IndieGoat\UniversalAPI\";
         string UniversalApplicationName = @"UniversalServiceUpdater.exe";
@@ -104,21 +103,21 @@ namespace IndieGoat.Net.Updater
             ApplicationName = Application.ProductName;
 
             //Initialize the update server
-            UpdateServer = new IndieClient();
+            UpdateServer = new UniversalClient.UniversalClient();
 
             //Connect to the vortex studio update server
             UpdateServer.ConnectToRemoteServer(ServerIP, ServerPort);
 
             //Check if the project exist's
-            string ProjectCheck = UpdateServer._ClientSender.SendCommand("Dyn", new string[] { "CHECKPROJECTNAME", ApplicationName });
+            string ProjectCheck = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "CHECKPROJECTNAME", ApplicationName });
 
             if (ProjectCheck == "CHECKPROJECT_FALSE")
             {
-                string CreateProject = UpdateServer._ClientSender.SendCommand("Dyn", new string[] { "ADDPROJECT", ApplicationName, ApplicationVersion, "test:test", "braydelritter@gmail.com" });
+                string CreateProject = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "ADDPROJECT", ApplicationName, ApplicationVersion, "test:test", "braydelritter@gmail.com" });
             }
 
             //Get the application version
-            string ServerVersion = UpdateServer._ClientSender.SendCommand("Dyn", new string[] { "GETVERSION", ApplicationName });
+            string ServerVersion = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "GETVERSION", ApplicationName });
 
             if (ServerVersion == ApplicationVersion)
             {

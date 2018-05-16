@@ -29,9 +29,8 @@ namespace Universal_Service_Updater_Tets
             sshService.TunnelLocalPort("192.168.0.16", "3389", true);
             sshService.TunnelLocalPort("192.168.0.16", "5750", true);
 
-            IndieClient client = new IndieClient();
-            client.ConnectToRemoteServer("localhost", 5750);
-            client._ClientSender.SendCommand("test", new string[] { "test" });
+            UniversalServiceUpdater updater = new UniversalServiceUpdater();
+            updater.CheckUpdate("localhost", 5750);
         }
     }
 }
