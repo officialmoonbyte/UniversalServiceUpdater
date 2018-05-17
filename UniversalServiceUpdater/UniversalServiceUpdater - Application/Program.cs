@@ -45,6 +45,8 @@ namespace UniversalServiceUpdater___Application
             ILogger.AddToLog("info", "Got process! Verifying");
             if (updateProgram == null) { ILogger.AddToLog("error", "Process is null!"); }
 
+            if (File.Exists(Application.StartupPath + "\\" + ApplicationSearchName + ".zip")) File.Delete(Application.StartupPath + "\\" + ApplicationSearchName + ".zip");
+
             DownloadUpdate();
             UpdateLoop();
         }
@@ -60,8 +62,6 @@ namespace UniversalServiceUpdater___Application
             {
                 //Gets the download directory
                 Uri URL = new Uri(DownloadURI);
-
-                if (File.Exists(Application.StartupPath + "\\" + ApplicationSearchName + ".zip")) File.Delete(Application.StartupPath + "\\" + ApplicationSearchName + ".zip");
 
                 try
                 {

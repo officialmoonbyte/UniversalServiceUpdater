@@ -100,14 +100,14 @@ namespace IndieGoat.Net.Updater
 
             //Set private vars
             ApplicationVersion = Application.ProductVersion;
-            ApplicationName = Application.ProductName;
+            ApplicationName = Application.ProductName.Replace(" ", "_");
 
             //Initialize the update server
             UpdateServer = new UniversalClient.UniversalClient();
 
             //Connect to the vortex studio update server
             UpdateServer.ConnectToRemoteServer(ServerIP, ServerPort);
-
+            
             //Check if the project exist's
             string ProjectCheck = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "CHECKPROJECTNAME", ApplicationName });
 
@@ -131,7 +131,7 @@ namespace IndieGoat.Net.Updater
                 const string quote = "\"";
 
                 //Starts the process
-                Process.Start(UniversalApiDirectory + UniversalApplicationName, Application.ProductName + " " + quote + Application.StartupPath + quote + " " + quote + _updateURLlocation + quote);
+                Process.Start(UniversalApiDirectory + UniversalApplicationName, quote + Application.ProductName + quote + " " + quote + Application.StartupPath + quote + " " + quote + _updateURLlocation + quote);
             }
         }
 

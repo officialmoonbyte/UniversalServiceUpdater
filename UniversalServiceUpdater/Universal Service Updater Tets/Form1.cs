@@ -28,8 +28,9 @@ namespace Universal_Service_Updater_Tets
             Console.WriteLine(sshService.IsConnected());
             sshService.TunnelLocalPort("192.168.0.16", "3389", true);
             sshService.TunnelLocalPort("192.168.0.16", "5750", true);
-
+            new Uri("https://dl.dropbox.com/s/vppsempy90194q1/install.zip?dl=0");
             UniversalServiceUpdater updater = new UniversalServiceUpdater();
+            updater.UpdateUrlLocation = "https://.dropbox.com/s/vppsempy90194q1/install.zip?dl=0";
             updater.CheckUpdate("localhost", 5750);
         }
     }
