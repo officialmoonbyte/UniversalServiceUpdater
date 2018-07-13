@@ -24,6 +24,19 @@ namespace UniversalServiceUpdater
             }
         }
 
+        event EventHandler<SendMessageEventArgs> IServerPlugin.SendMessage
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         public void onLoad(string ServerDirectory)
         {
             //Set all vars
@@ -41,7 +54,7 @@ namespace UniversalServiceUpdater
             }
         }
 
-        public void Invoke(TcpListener _serverSocket, TcpClient _clientSocket, int port, List<string> Args, string ServerDirectory)
+        public void Invoke(ClientSocketWorkload workload, ClientContext context, int port, List<string> Args, string ServerDirectory)
         {
             try
             {
@@ -63,11 +76,11 @@ namespace UniversalServiceUpdater
                         //Add the new project to the current list
                         Projects.Add(NewProject);
 
-                        SendMessage(_clientSocket, "ADDPROJECT_TRUE");
+                        workload.SendMessage(context, "ADDPROJECT_TRUE");
                     }
                     catch
                     {
-                        SendMessage(_clientSocket, "ADDPROJECT_FALSE");
+                        workload.SendMessage(context, "ADDPROJECT_FALSE");
                     }
                 }
                 // CheckProjectName[Args1] ProjectName[Args2]
@@ -79,12 +92,12 @@ namespace UniversalServiceUpdater
                     {
                         if (Projects[i].ProjectName == _Name)
                         {
-                            SendMessage(_clientSocket, "CHECKPROJECT_TRUE");
+                            workload.SendMessage(context, "CHECKPROJECT_TRUE");
                             return;
                         }
                     }
 
-                    SendMessage(_clientSocket, "CHECKPROJECT_FALSE");
+                    workload.SendMessage(context, "CHECKPROJECT_FALSE");
                 }
                 // GetVersion[Args1] ProjectName[Args2]
                 else if (Args[1].ToUpper() == "GETVERSION")
@@ -104,18 +117,18 @@ namespace UniversalServiceUpdater
                             if (tmpProject.ProjectName == _Name)
                             {
                                 //Sends a message to the client of the temp project version.
-                                SendMessage(_clientSocket, tmpProject.Version);
+                                workload.SendMessage(context, tmpProject.Version);
                                 return;
                             }
                         }
 
                         //Sends a error message to client, project does not exist's in the project list.
-                        SendMessage(_clientSocket, "GETVERSION_PROJECTNOTEXIST");
+                        workload.SendMessage(context, "GETVERSION_PROJECTNOTEXIST");
                     }
                     catch
                     {
                         //Sends a error message to client, unknown error.
-                        SendMessage(_clientSocket, "GETVERSION_FALSE");
+                        workload.SendMessage(context, "GETVERSION_FALSE");
                     }
                 }
                 // ChangeVersion[args1] ProjectName[args2] AuthPacket[Args3] NewVersion[Args4]
@@ -138,15 +151,15 @@ namespace UniversalServiceUpdater
                             string Requestcode = TmpProject.ChangeVersion(_AuthPacket, _NewVersion);
 
                             //Sends error message and / or sucessful message
-                            if (Requestcode == "UNKNOWN") SendMessage(_clientSocket, "CHANGEVERSION_UNKNOWN");
-                            if (Requestcode == "AUTHE") SendMessage(_clientSocket, "CHANGEVERSION_AUTH");
-                            if (Requestcode == "TRUE") SendMessage(_clientSocket, "CHANGEVERSION_TRUE");
+                            if (Requestcode == "UNKNOWN") workload.SendMessage(context, "CHANGEVERSION_UNKNOWN");
+                            if (Requestcode == "AUTHE") workload.SendMessage(context, "CHANGEVERSION_AUTH");
+                            if (Requestcode == "TRUE") workload.SendMessage(context, "CHANGEVERSION_TRUE");
                             return;
                         }
                     }
 
                     //Sends a message. project does not exists
-                    SendMessage(_clientSocket, "CHANGEVERSION_PROJECTNOTEXIST");
+                    workload.SendMessage(context, "CHANGEVERSION_PROJECTNOTEXIST");
                 }
                 // ChangeAuth[args1] ProjectName[Args2] OldAuth[Args3] NewAuth[Args4]
                 else if (Args[1].ToUpper() == "CHANGEAUTH")
@@ -169,15 +182,15 @@ namespace UniversalServiceUpdater
                             string Requestcode = tmpProject.ChangeAuth(_OldAuth, _NewAuth);
 
                             //Sends error message and / or sucessful message
-                            if (Requestcode == "UNKNOWN") SendMessage(_clientSocket, "CHANGEAUTH_UNKNOWN");
-                            if (Requestcode == "AUTHE") SendMessage(_clientSocket, "CHANGEAUTH_AUTH");
-                            if (Requestcode == "TRUE") SendMessage(_clientSocket, "CHANGEAUTH_TRUE");
+                            if (Requestcode == "UNKNOWN") workload.SendMessage(context, "CHANGEAUTH_UNKNOWN");
+                            if (Requestcode == "AUTHE") workload.SendMessage(context, "CHANGEAUTH_AUTH");
+                            if (Requestcode == "TRUE") workload.SendMessage(context, "CHANGEAUTH_TRUE");
                             return;
                         }
                     }
 
                     //Sends a message. project does not exist
-                    SendMessage(_clientSocket, "CHANGEAUTH_PROJECTNOTEXIST");
+                    workload.SendMessage(context, "CHANGEAUTH_PROJECTNOTEXIST");
 
                 }
                 else if (Args[1].ToUpper() == "FORGOTAUTH")
@@ -200,11 +213,11 @@ namespace UniversalServiceUpdater
 
                                 //Sends email
                                 Console.WriteLine(tmpProject.Email);
-                                SendMessage(_clientSocket, "FORGOTAUTH_ACTIVATE_TRUE");
+                                workload.SendMessage(context, "FORGOTAUTH_ACTIVATE_TRUE");
                             }
                         }
 
-                        SendMessage(_clientSocket, "FORGOTAUTH_ACTIVATE_FALSE");
+                        workload.SendMessage(context, "FORGOTAUTH_ACTIVATE_FALSE");
                     }
                     //ForgotAuth[args1] Confirm[Args2] ProjectName[Args3] AuthCode[Args4]
                     if (Args[2].ToUpper() == "CONFIRM")
@@ -225,19 +238,19 @@ namespace UniversalServiceUpdater
 
                                 if (ProjectAuthCode == "0")
                                 {
-                                    SendMessage(_clientSocket, "FORGOTAUTH_CONFIRM_TIME");
+                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_TIME");
                                     return;
                                 }
 
                                 //Verify auth code
                                 if (AuthCode == tmpProject.AuthCode)
                                 {
-                                    SendMessage(_clientSocket, "FORGOTAUTH_CONFIRM_TRUE");
+                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_TRUE");
                                     return;
                                 }
                                 else
                                 {
-                                    SendMessage(_clientSocket, "FORGOTAUTH_CONFIRM_FALSE");
+                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_FALSE");
                                     return;
                                 }
                             }
@@ -263,7 +276,7 @@ namespace UniversalServiceUpdater
 
                                 if (ProjectAuthCode == "0")
                                 {
-                                    SendMessage(_clientSocket, "FORGOTAUTH_CONFIRM_TIME");
+                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_TIME");
                                     return;
                                 }
 
@@ -275,7 +288,7 @@ namespace UniversalServiceUpdater
                                 }
                                 else
                                 {
-                                    SendMessage(_clientSocket, "FORGOTAUTH_CONFIRM_FALSE");
+                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_FALSE");
                                     return;
                                 }
                             }
@@ -288,17 +301,6 @@ namespace UniversalServiceUpdater
             {
 
             }
-        }
-
-        /// <summary>
-        /// Sends a message to the client
-        /// </summary>
-        /// <param name="client">TCP client to send the value to</param>
-        /// <param name="value">String of text</param>
-        private void SendMessage(TcpClient client, string value)
-        {
-            //Sends a string to a client using UTF8
-            client.Client.Send(Encoding.UTF8.GetBytes(value));
         }
 
         public void Unload()

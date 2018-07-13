@@ -1,4 +1,5 @@
-﻿using System;
+﻿using IndieGoat.Net.Tcp;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -16,7 +17,7 @@ namespace IndieGoat.Net.Updater
         string ApplicationName;
         string _updateURLlocation = "";
 
-        UniversalClient.UniversalClient UpdateServer;
+        UniversalClient UpdateServer;
 
         string UniversalApiDirectory = @"C:\IndieGoat\UniversalAPI\";
         string UniversalApplicationName = @"UniversalServiceUpdater.exe";
@@ -103,7 +104,7 @@ namespace IndieGoat.Net.Updater
             ApplicationName = Application.ProductName.Replace(" ", "_");
 
             //Initialize the update server
-            UpdateServer = new UniversalClient.UniversalClient();
+            UpdateServer = new UniversalClient();
 
             //Connect to the vortex studio update server
             UpdateServer.ConnectToRemoteServer(ServerIP, ServerPort);
