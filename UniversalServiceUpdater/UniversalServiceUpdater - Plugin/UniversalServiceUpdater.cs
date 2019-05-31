@@ -1,13 +1,11 @@
-﻿using IndieGoat.UniversalServer.Interfaces;
+﻿using Moonbyte.UniversalServer.PluginFramework;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Sockets;
-using System.Text;
 
 namespace UniversalServiceUpdater
 {
-    public class UniversalServiceUpdater : IServerPlugin
+    public class UniversalServiceUpdater : UniversalPluginFramework
     {
         #region Vars
 
@@ -16,31 +14,18 @@ namespace UniversalServiceUpdater
 
         #endregion
 
-        string IServerPlugin.Name
+        public string Name
         {
-            get
-            {
-                return "Dyn";
-            }
+            get { return "dyn"; }
         }
 
-        event EventHandler<SendMessageEventArgs> IServerPlugin.SendMessage
-        {
-            add
-            {
-                throw new NotImplementedException();
-            }
+        string _PluginSettingsDirectory;
 
-            remove
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public void onLoad(string ServerDirectory)
+        public void OnLoad(string PluginSettingsDirectory)
         {
             //Set all vars
-            DynDirectory = ServerDirectory + @"\Dyn";
+            DynDirectory = PluginSettingsDirectory + @"\Dyn";
+            _PluginSettingsDirectory = PluginSettingsDirectory;
 
             //Create the Dyn directory if it does not exist
             Directory.CreateDirectory(DynDirectory);
@@ -49,63 +34,63 @@ namespace UniversalServiceUpdater
             DirectoryInfo projectDirectory = new DirectoryInfo(DynDirectory);
             foreach (DirectoryInfo dirInfo in projectDirectory.GetDirectories())
             {
-                Project LoadedProject = new Project(dirInfo.Name, ServerDirectory);
+                Project LoadedProject = new Project(dirInfo.Name, PluginSettingsDirectory);
                 Projects.Add(LoadedProject);
             }
         }
 
-        public void Invoke(ClientSocketWorkload workload, ClientContext context, int port, List<string> Args, string ServerDirectory)
+        public void Invoke(ClientContext Client, string[] RawCommand)
         {
             try
             {
                 // AddProject[Args1] [ProjectName][Args2] [Version][Args3] [AuthPacket][Args4] [Email][Args5]
-                if (Args[1].ToUpper() == "ADDPROJECT")
+                if (RawCommand[1].ToUpper() == "ADDPROJECT")
                 {
                     try
                     {
                         //Get the version
-                        string _Name = Args[2];
-                        string _Version = Args[3];
-                        string _Auth = Args[4];
-                        string _Email = Args[5];
+                        string _Name = RawCommand[2];
+                        string _Version = RawCommand[3];
+                        string _Auth = RawCommand[4];
+                        string _Email = RawCommand[5];
 
                         //Initialize new project
-                        Project NewProject = new Project(_Name, ServerDirectory);
+                        Project NewProject = new Project(_Name, _PluginSettingsDirectory);
                         NewProject.InitializeNewProject(_Version, _Auth, _Email);
 
                         //Add the new project to the current list
                         Projects.Add(NewProject);
 
-                        workload.SendMessage(context, "ADDPROJECT_TRUE");
+                        Client.SendMessage("ADDPROJECT_TRUE");
                     }
                     catch
                     {
-                        workload.SendMessage(context, "ADDPROJECT_FALSE");
+                        Client.SendMessage("ADDPROJECT_FALSE");
                     }
                 }
                 // CheckProjectName[Args1] ProjectName[Args2]
-                else if (Args[1].ToUpper() == "CHECKPROJECTNAME")
+                else if (RawCommand[1].ToUpper() == "CHECKPROJECTNAME")
                 {
-                    string _Name = Args[2];
+                    string _Name = RawCommand[2];
 
                     for (int i = 0; i < Projects.Count; i++)
                     {
                         if (Projects[i].ProjectName == _Name)
                         {
-                            workload.SendMessage(context, "CHECKPROJECT_TRUE");
+                            Client.SendMessage("CHECKPROJECT_TRUE");
                             return;
                         }
                     }
 
-                    workload.SendMessage(context, "CHECKPROJECT_FALSE");
+                    Client.SendMessage("CHECKPROJECT_FALSE");
                 }
                 // GetVersion[Args1] ProjectName[Args2]
-                else if (Args[1].ToUpper() == "GETVERSION")
+                else if (RawCommand[1].ToUpper() == "GETVERSION")
                 {
                     try
                     {
                         //Gets the name from the args list
-                        string _Name = Args[2];
+                        string _Name = RawCommand[2];
 
                         //For each project listed
                         for (int i = 0; i < Projects.Count; i++)
@@ -117,27 +102,27 @@ namespace UniversalServiceUpdater
                             if (tmpProject.ProjectName == _Name)
                             {
                                 //Sends a message to the client of the temp project version.
-                                workload.SendMessage(context, tmpProject.Version);
+                                Client.SendMessage(tmpProject.Version);
                                 return;
                             }
                         }
 
                         //Sends a error message to client, project does not exist's in the project list.
-                        workload.SendMessage(context, "GETVERSION_PROJECTNOTEXIST");
+                        Client.SendMessage("GETVERSION_PROJECTNOTEXIST");
                     }
                     catch
                     {
                         //Sends a error message to client, unknown error.
-                        workload.SendMessage(context, "GETVERSION_FALSE");
+                        Client.SendMessage("GETVERSION_FALSE");
                     }
                 }
                 // ChangeVersion[args1] ProjectName[args2] AuthPacket[Args3] NewVersion[Args4]
-                else if (Args[1].ToUpper() == "CHANGEVERSION")
+                else if (RawCommand[1].ToUpper() == "CHANGEVERSION")
                 {
                     //Get all values from the args list
-                    string _ProjectName = Args[2];
-                    string _AuthPacket = Args[3];
-                    string _NewVersion = Args[4];
+                    string _ProjectName = RawCommand[2];
+                    string _AuthPacket = RawCommand[3];
+                    string _NewVersion = RawCommand[4];
 
                     for (int i = 0; i < Projects.Count; i++)
                     {
@@ -151,23 +136,23 @@ namespace UniversalServiceUpdater
                             string Requestcode = TmpProject.ChangeVersion(_AuthPacket, _NewVersion);
 
                             //Sends error message and / or sucessful message
-                            if (Requestcode == "UNKNOWN") workload.SendMessage(context, "CHANGEVERSION_UNKNOWN");
-                            if (Requestcode == "AUTHE") workload.SendMessage(context, "CHANGEVERSION_AUTH");
-                            if (Requestcode == "TRUE") workload.SendMessage(context, "CHANGEVERSION_TRUE");
+                            if (Requestcode == "UNKNOWN") Client.SendMessage("CHANGEVERSION_UNKNOWN");
+                            if (Requestcode == "AUTHE") Client.SendMessage("CHANGEVERSION_AUTH");
+                            if (Requestcode == "TRUE") Client.SendMessage("CHANGEVERSION_TRUE");
                             return;
                         }
                     }
 
                     //Sends a message. project does not exists
-                    workload.SendMessage(context, "CHANGEVERSION_PROJECTNOTEXIST");
+                    Client.SendMessage("CHANGEVERSION_PROJECTNOTEXIST");
                 }
                 // ChangeAuth[args1] ProjectName[Args2] OldAuth[Args3] NewAuth[Args4]
-                else if (Args[1].ToUpper() == "CHANGEAUTH")
+                else if (RawCommand[1].ToUpper() == "CHANGEAUTH")
                 {
                     //Get all values from the args list
-                    string _ProjectName = Args[2];
-                    string _OldAuth = Args[3];
-                    string _NewAuth = Args[4];
+                    string _ProjectName = RawCommand[2];
+                    string _OldAuth = RawCommand[3];
+                    string _NewAuth = RawCommand[4];
 
                     //Tries to find the project
                     for (int i = 0; i < Projects.Count; i++)
@@ -182,24 +167,24 @@ namespace UniversalServiceUpdater
                             string Requestcode = tmpProject.ChangeAuth(_OldAuth, _NewAuth);
 
                             //Sends error message and / or sucessful message
-                            if (Requestcode == "UNKNOWN") workload.SendMessage(context, "CHANGEAUTH_UNKNOWN");
-                            if (Requestcode == "AUTHE") workload.SendMessage(context, "CHANGEAUTH_AUTH");
-                            if (Requestcode == "TRUE") workload.SendMessage(context, "CHANGEAUTH_TRUE");
+                            if (Requestcode == "UNKNOWN") Client.SendMessage("CHANGEAUTH_UNKNOWN");
+                            if (Requestcode == "AUTHE") Client.SendMessage("CHANGEAUTH_AUTH");
+                            if (Requestcode == "TRUE") Client.SendMessage("CHANGEAUTH_TRUE");
                             return;
                         }
                     }
 
                     //Sends a message. project does not exist
-                    workload.SendMessage(context, "CHANGEAUTH_PROJECTNOTEXIST");
+                    Client.SendMessage("CHANGEAUTH_PROJECTNOTEXIST");
 
                 }
-                else if (Args[1].ToUpper() == "FORGOTAUTH")
+                else if (RawCommand[1].ToUpper() == "FORGOTAUTH")
                 {
                     //FORGOTAUTH[ARGS1] ACTIVATE[ARGS2] ProjectName[Args3]
-                    if (Args[2].ToUpper() == "ACTIVATE")
+                    if (RawCommand[2].ToUpper() == "ACTIVATE")
                     {
 
-                        string _ProjectName = Args[3];
+                        string _ProjectName = RawCommand[3];
                         //Tries to find the project
                         for (int i = 0; i < Projects.Count; i++)
                         {
@@ -213,18 +198,18 @@ namespace UniversalServiceUpdater
 
                                 //Sends email
                                 Console.WriteLine(tmpProject.Email);
-                                workload.SendMessage(context, "FORGOTAUTH_ACTIVATE_TRUE");
+                                Client.SendMessage("FORGOTAUTH_ACTIVATE_TRUE");
                             }
                         }
 
-                        workload.SendMessage(context, "FORGOTAUTH_ACTIVATE_FALSE");
+                        Client.SendMessage("FORGOTAUTH_ACTIVATE_FALSE");
                     }
                     //ForgotAuth[args1] Confirm[Args2] ProjectName[Args3] AuthCode[Args4]
-                    if (Args[2].ToUpper() == "CONFIRM")
+                    if (RawCommand[2].ToUpper() == "CONFIRM")
                     {
                         //Sets all vars
-                        string _ProjectName = Args[3];
-                        string AuthCode = Args[4];
+                        string _ProjectName = RawCommand[3];
+                        string AuthCode = RawCommand[4];
 
                         //Tries to find the project
                         for (int i = 0; i < Projects.Count; i++)
@@ -238,31 +223,31 @@ namespace UniversalServiceUpdater
 
                                 if (ProjectAuthCode == "0")
                                 {
-                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_TIME");
+                                    Client.SendMessage("FORGOTAUTH_CONFIRM_TIME");
                                     return;
                                 }
 
                                 //Verify auth code
                                 if (AuthCode == tmpProject.AuthCode)
                                 {
-                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_TRUE");
+                                    Client.SendMessage("FORGOTAUTH_CONFIRM_TRUE");
                                     return;
                                 }
                                 else
                                 {
-                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_FALSE");
+                                    Client.SendMessage("FORGOTAUTH_CONFIRM_FALSE");
                                     return;
                                 }
                             }
                         }
                     }
                     //ForgotAuth[Args1] Change[Args2] ProjectName[Args3] NewAuth[Args4] AuthCode[Args5]
-                    else if (Args[2].ToUpper() == "CHANGE")
+                    else if (RawCommand[2].ToUpper() == "CHANGE")
                     {
                         //Sets all vars
-                        string _ProjectName = Args[3];
-                        string NewAuth = Args[4];
-                        string AuthCode = Args[5];
+                        string _ProjectName = RawCommand[3];
+                        string NewAuth = RawCommand[4];
+                        string AuthCode = RawCommand[5];
 
                         //Tries to find the project
                         for (int i = 0; i < Projects.Count; i++)
@@ -276,7 +261,7 @@ namespace UniversalServiceUpdater
 
                                 if (ProjectAuthCode == "0")
                                 {
-                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_TIME");
+                                    Client.SendMessage("FORGOTAUTH_CONFIRM_TIME");
                                     return;
                                 }
 
@@ -288,7 +273,7 @@ namespace UniversalServiceUpdater
                                 }
                                 else
                                 {
-                                    workload.SendMessage(context, "FORGOTAUTH_CONFIRM_FALSE");
+                                    Client.SendMessage("FORGOTAUTH_CONFIRM_FALSE");
                                     return;
                                 }
                             }
@@ -301,11 +286,6 @@ namespace UniversalServiceUpdater
             {
 
             }
-        }
-
-        public void Unload()
-        {
-
         }
     }
 }

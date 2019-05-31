@@ -1,4 +1,4 @@
-﻿using IndieGoat.Net.Tcp;
+﻿using Moonbyte.UniversalClient;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -110,15 +110,15 @@ namespace IndieGoat.Net.Updater
             UpdateServer.ConnectToRemoteServer(ServerIP, ServerPort);
             
             //Check if the project exist's
-            string ProjectCheck = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "CHECKPROJECTNAME", ApplicationName });
+            string ProjectCheck = UpdateServer.SendCommand("Dyn", new string[] { "CHECKPROJECTNAME", ApplicationName });
 
             if (ProjectCheck == "CHECKPROJECT_FALSE")
             {
-                string CreateProject = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "ADDPROJECT", ApplicationName, ApplicationVersion, "test:test", "braydelritter@gmail.com" });
+                string CreateProject = UpdateServer.SendCommand("Dyn", new string[] { "ADDPROJECT", ApplicationName, ApplicationVersion, "test:test", "braydelritter@gmail.com" });
             }
 
             //Get the application version
-            string ServerVersion = UpdateServer.ClientSender.SendCommand("Dyn", new string[] { "GETVERSION", ApplicationName });
+            string ServerVersion = UpdateServer.SendCommand("Dyn", new string[] { "GETVERSION", ApplicationName });
 
             if (ServerVersion == ApplicationVersion)
             {
