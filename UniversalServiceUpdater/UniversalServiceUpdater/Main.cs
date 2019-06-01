@@ -104,7 +104,7 @@ namespace IndieGoat.Net.Updater
             ApplicationName = Application.ProductName.Replace(" ", "_");
 
             //Initialize the update server
-            UpdateServer = new UniversalClient();
+            UpdateServer = new UniversalClient(false);
 
             //Connect to the vortex studio update server
             UpdateServer.ConnectToRemoteServer(ServerIP, ServerPort);
